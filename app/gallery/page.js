@@ -1,158 +1,111 @@
+"use client"
+
 import Image from "next/image"
+import { useState, useEffect } from "react"
 
 export default function GalleryPage() {
-  const galleryImages = [
-    { src: "/placeholder.svg?height=300&width=400", alt: "Charcoal Loading" },
-    { src: "/placeholder.svg?height=300&width=400", alt: "Warehouse Storage" },
-    { src: "/placeholder.svg?height=400&width=600", alt: "Production Process" },
-    { src: "/placeholder.svg?height=200&width=300", alt: "Product Packaging" },
-    { src: "/placeholder.svg?height=200&width=300", alt: "Quality Control" },
-    { src: "/placeholder.svg?height=400&width=400", alt: "Charcoal Fire" },
-    { src: "/placeholder.svg?height=300&width=400", alt: "Product Samples" },
-    { src: "/placeholder.svg?height=300&width=400", alt: "Export Ready" },
-    { src: "/placeholder.svg?height=200&width=300", alt: "Charcoal Pieces" },
-    { src: "/placeholder.svg?height=200&width=300", alt: "Packaging Process" },
-    { src: "/placeholder.svg?height=400&width=400", alt: "Large Charcoal" },
-    { src: "/placeholder.svg?height=300&width=400", alt: "Final Product" },
-    { src: "/placeholder.svg?height=200&width=300", alt: "Raw Materials" },
-    { src: "/placeholder.svg?height=200&width=300", alt: "White Packaging" },
-    { src: "/placeholder.svg?height=200&width=300", alt: "Product Variety" },
-  ]
+  const [galleryImages, setGalleryImages] = useState([])
+  const [settings, setSettings] = useState({
+    galleryPageDescription: "Loading gallery description...",
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        // Fetch gallery images
+        const galleryRes = await fetch("/api/gallery")
+        const galleryData = await galleryRes.json()
+        if (galleryData.success && galleryData.data) {
+          setGalleryImages(galleryData.data)
+        } else {
+          console.error("Failed to fetch gallery images:", galleryData.error || "No data")
+        }
+
+        // Fetch settings for description
+        const settingsRes = await fetch("/api/settings")
+        const settingsData = await settingsRes.json()
+        if (settingsData.success && settingsData.data) {
+          setSettings((prevSettings) => ({ ...prevSettings, ...settingsData.data }))
+        } else {
+          console.error("Failed to fetch settings for gallery page:", settingsData.error || "No data")
+        }
+      } catch (error) {
+        console.error("Error fetching gallery page data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p>Loading gallery...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Header */}
-      <section className="py-20 px-4 text-center">
-        <h1 className="text-6xl font-bold mb-8">
-          OUR <span className="text-red-600">GALLERY</span>
-        </h1>
-        <p className="text-lg text-gray-400 max-w-3xl mx-auto">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sit tellus, luctus nec ullamcorper mattis,
-          pulvinar dapibus leo.
-        </p>
+      {/* Hero Section */}
+      <section
+        className="relative h-96 flex items-center justify-center text-white bg-black" // Added bg-black as fallback
+      >
+        {settings.gallery_page_hero_image_url && (
+          <Image
+            src={settings.gallery_page_hero_image_url}
+            alt="Gallery Hero"
+            layout="fill"
+            objectFit="cover"
+            className="absolute inset-0"
+            style={{ filter: "brightness(0.6)" }} // Apply brightness to the image
+            unoptimized={settings.gallery_page_hero_image_url?.startsWith('/')}
+          />
+        )}
+        <div className="relative z-10 text-center px-4">
+          <h1 className="text-6xl font-bold mb-8">
+            OUR <span className="text-red-600">GALLERY</span>
+          </h1>
+          <p className="text-lg text-gray-300 max-w-3xl mx-auto"> {/* Adjusted text color for better visibility on image */}
+            {settings.gallery_page_description || "Explore our collection of high-quality charcoal products and facilities."}
+          </p>
+        </div>
       </section>
 
       {/* Gallery Grid */}
       <section className="px-4 pb-16">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {/* Large featured image */}
-            <div className="md:col-span-2 md:row-span-2">
-              <Image
-                src={galleryImages[2].src || "/placeholder.svg"}
-                alt={galleryImages[2].alt}
-                width={600}
-                height={400}
-                className="w-full h-full object-cover rounded-lg hover:scale-105 transition-transform duration-300"
-              />
+          {galleryImages.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {galleryImages.map((image, index) => (
+                <div
+                  key={image.id || index} // Prefer a unique ID from data if available
+                  className="aspect-w-1 aspect-h-1 group relative" // aspect ratio for consistent sizing
+                >
+                  <Image
+                    src={image.image || image.src || "/placeholder.svg"} // Use 'image.image' or 'image.src' based on your data structure
+                    alt={image.title || image.alt || "Gallery image"} // Use 'image.title' or 'image.alt'
+                    layout="fill" // Use layout fill for aspect ratio
+                    objectFit="cover" // Cover the area
+                    className="rounded-lg group-hover:opacity-75 transition-opacity duration-300"
+                  />
+                  {image.title && (
+                     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <p className="text-white text-lg font-semibold p-4 text-center">{image.title}</p>
+                     </div>
+                  )}
+                </div>
+              ))}
             </div>
-
-            {/* Regular grid images */}
-            {galleryImages.slice(0, 2).map((image, index) => (
-              <div key={index} className="aspect-square">
-                <Image
-                  src={image.src || "/placeholder.svg"}
-                  alt={image.alt}
-                  width={300}
-                  height={300}
-                  className="w-full h-full object-cover rounded-lg hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-            ))}
-
-            {galleryImages.slice(3, 5).map((image, index) => (
-              <div key={index + 3} className="aspect-square">
-                <Image
-                  src={image.src || "/placeholder.svg"}
-                  alt={image.alt}
-                  width={300}
-                  height={300}
-                  className="w-full h-full object-cover rounded-lg hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-            ))}
-
-            {/* Another large image */}
-            <div className="md:col-span-2">
-              <Image
-                src={galleryImages[5].src || "/placeholder.svg"}
-                alt={galleryImages[5].alt}
-                width={600}
-                height={300}
-                className="w-full h-full object-cover rounded-lg hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-
-            {galleryImages.slice(6, 8).map((image, index) => (
-              <div key={index + 6} className="aspect-square">
-                <Image
-                  src={image.src || "/placeholder.svg"}
-                  alt={image.alt}
-                  width={300}
-                  height={300}
-                  className="w-full h-full object-cover rounded-lg hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-            ))}
-
-            {/* Large vertical image */}
-            <div className="row-span-2">
-              <Image
-                src={galleryImages[10].src || "/placeholder.svg"}
-                alt={galleryImages[10].alt}
-                width={400}
-                height={600}
-                className="w-full h-full object-cover rounded-lg hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-
-            {galleryImages.slice(8, 10).map((image, index) => (
-              <div key={index + 8} className="aspect-square">
-                <Image
-                  src={image.src || "/placeholder.svg"}
-                  alt={image.alt}
-                  width={300}
-                  height={300}
-                  className="w-full h-full object-cover rounded-lg hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-            ))}
-
-            {galleryImages.slice(11, 13).map((image, index) => (
-              <div key={index + 11} className="aspect-square">
-                <Image
-                  src={image.src || "/placeholder.svg"}
-                  alt={image.alt}
-                  width={300}
-                  height={300}
-                  className="w-full h-full object-cover rounded-lg hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-            ))}
-
-            {/* Bottom row */}
-            <div className="md:col-span-2">
-              <Image
-                src={galleryImages[11].src || "/placeholder.svg"}
-                alt={galleryImages[11].alt}
-                width={600}
-                height={300}
-                className="w-full h-full object-cover rounded-lg hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-
-            {galleryImages.slice(13, 15).map((image, index) => (
-              <div key={index + 13} className="aspect-square">
-                <Image
-                  src={image.src || "/placeholder.svg"}
-                  alt={image.alt}
-                  width={300}
-                  height={300}
-                  className="w-full h-full object-cover rounded-lg hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-            ))}
-          </div>
+          ) : (
+            <p className="text-center text-gray-400 text-xl">No images found in the gallery yet.</p>
+          )}
         </div>
       </section>
     </div>

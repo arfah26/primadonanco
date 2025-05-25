@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import db from "@/lib/database"
 import { createSession } from "@/lib/auth"
+import bcrypt from "bcryptjs"
 
 export async function POST(request) {
   try {
@@ -10,9 +11,20 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Username and password are required" }, { status: 400 })
     }
 
-    const user = db.getUser(username)
+    console.log("Login attempt for username:", username)
 
-    if (!user || user.password !== password) {
+    const user = await db.getUser(username)
+    console.log("User found:", user ? "Yes" : "No")
+
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Invalid credentials" }, { status: 401 })
+    }
+
+    // Compare password with bcrypt
+    const isPasswordValid = await bcrypt.compare(password, user.password)
+    console.log("Password valid:", isPasswordValid)
+
+    if (!isPasswordValid) {
       return NextResponse.json({ success: false, error: "Invalid credentials" }, { status: 401 })
     }
 
@@ -38,6 +50,7 @@ export async function POST(request) {
 
     return response
   } catch (error) {
+    console.error("Login error:", error)
     return NextResponse.json({ success: false, error: "Login failed" }, { status: 500 })
   }
 }

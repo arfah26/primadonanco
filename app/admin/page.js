@@ -20,20 +20,61 @@ export default function AdminPage() {
     totalProducts: 0,
     totalContacts: 0,
     totalGalleryImages: 0,
-    monthlyVisits: {}
+    monthlyVisits: {},
   })
   const [settings, setSettings] = useState({})
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const { toast } = useToast()
 
+  // Helper function for file uploads
+  const handleFileUpload = async (event, fieldName, stateSetter) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    const formData = new FormData()
+    formData.append("file", file)
+
+    try {
+      // Show a loading toast
+      const uploadToast = toast({ title: "Uploading...", description: "Please wait while the file is being uploaded." })
+      
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      // Dismiss loading toast
+      if (uploadToast && uploadToast.dismiss) {
+        uploadToast.dismiss()
+      } else if (typeof uploadToast === 'function') { // For older toast versions that return a dismiss function
+        uploadToast();
+      }
+
+
+      const data = await response.json()
+
+      if (data.success) {
+        stateSetter(data.path) // Update the state with the returned path
+        toast({ title: "Success!", description: "File uploaded successfully. Path: " + data.path })
+      } else {
+        toast({ title: "Upload Error", description: data.error || "Failed to upload file.", variant: "destructive" })
+      }
+    } catch (error) {
+      toast({ title: "Upload Error", description: "An error occurred during upload.", variant: "destructive" })
+      console.error("File upload error:", error)
+       // Dismiss loading toast on error too
+      if (typeof uploadToast === 'function') uploadToast(); // Check if it's a function before calling
+    }
+  }
+
   const [newProduct, setNewProduct] = useState({
     name: "",
     description: "",
     image: "",
     category: "standard",
-    price: 0,
-    stock: 0,
+    // price: 0,
+    // stock: 0,
   })
 
   const [newGalleryImage, setNewGalleryImage] = useState({
@@ -68,20 +109,23 @@ export default function AdminPage() {
       if (productsData.success) setProducts(productsData.data || [])
       if (galleryData.success) setGallery(galleryData.data || [])
       if (contactsData.success) setContacts(contactsData.data || [])
-      if (analyticsData.success) setAnalytics(analyticsData.data || {
-        totalVisits: 0,
-        totalProducts: 0,
-        totalContacts: 0,
-        totalGalleryImages: 0,
-        monthlyVisits: {}
-      })
+      if (analyticsData.success)
+        setAnalytics(
+          analyticsData.data || {
+            totalVisits: 0,
+            totalProducts: 0,
+            totalContacts: 0,
+            totalGalleryImages: 0,
+            monthlyVisits: {},
+          },
+        )
       if (settingsData.success) setSettings(settingsData.data || {})
     } catch (error) {
       console.error("Failed to fetch data:", error)
-      toast({ 
-        title: "Error", 
-        description: "Failed to load dashboard data", 
-        variant: "destructive" 
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard data",
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -100,7 +144,8 @@ export default function AdminPage() {
 
       if (data.success) {
         setProducts([...products, data.data])
-        setNewProduct({ name: "", description: "", image: "", category: "standard", price: 0, stock: 0 })
+        // setNewProduct({ name: "", description: "", image: "", category: "standard", price: 0, stock: 0 })
+        setNewProduct({ name: "", description: "", image: "", category: "standard" })
         toast({ title: "Success!", description: "Product added successfully" })
       } else {
         toast({ title: "Error", description: data.error, variant: "destructive" })
@@ -111,6 +156,8 @@ export default function AdminPage() {
   }
 
   const deleteProduct = async (id) => {
+    if (!confirm("Are you sure you want to delete this product?")) return
+
     try {
       const response = await fetch(`/api/products/${id}`, { method: "DELETE" })
       const data = await response.json()
@@ -147,6 +194,8 @@ export default function AdminPage() {
   }
 
   const deleteGalleryImage = async (id) => {
+    if (!confirm("Are you sure you want to delete this image?")) return
+
     try {
       const response = await fetch(`/api/gallery/${id}`, { method: "DELETE" })
       const data = await response.json()
@@ -293,24 +342,29 @@ export default function AdminPage() {
                   value={newProduct.description}
                   onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
                 />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Input
-                    placeholder="Image URL"
-                    value={newProduct.image}
-                    onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
-                  />
-                  <Input
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Product Image</label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileUpload(e, 'image', (path) => setNewProduct(prev => ({ ...prev, image: path })))}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
+                    />
+                    {newProduct.image && <img src={newProduct.image} alt="Product preview" className="mt-2 h-20 rounded" />}
+                  </div>
+                  {/* <Input
                     type="number"
                     placeholder="Price"
                     value={newProduct.price}
                     onChange={(e) => setNewProduct({ ...newProduct, price: Number(e.target.value) })}
-                  />
-                  <Input
+                  /> */}
+                  {/* <Input
                     type="number"
                     placeholder="Stock"
                     value={newProduct.stock}
                     onChange={(e) => setNewProduct({ ...newProduct, stock: Number(e.target.value) })}
-                  />
+                  /> */}
                 </div>
                 <Button onClick={addProduct} className="bg-red-600 hover:bg-red-700">
                   Add Product
@@ -324,29 +378,35 @@ export default function AdminPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Array.isArray(products) && products.map((product) => (
-                    <div key={product.id} className="border p-4 rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold">{product.name}</h3>
-                        <Badge variant="secondary">{product.category}</Badge>
+                  {Array.isArray(products) &&
+                    products.map((product) => (
+                      <div key={product.id} className="border p-4 rounded-lg">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-bold">{product.name}</h3>
+                          <Badge variant="secondary">{product.category}</Badge>
+                        </div>
+                        <p className="text-gray-600 text-sm mb-2">{product.description}</p>
+                        <div className="flex justify-between items-center mb-2">
+                          {/* <span className="font-semibold">${product.price}</span>
+                          <span className="text-sm text-gray-500">Stock: {product.stock}</span> */}
+                        </div>
+                        <Button
+                          onClick={() => deleteProduct(product.id)}
+                          variant="destructive"
+                          size="sm"
+                          className="w-full"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </Button>
                       </div>
-                      <p className="text-gray-600 text-sm mb-2">{product.description}</p>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-semibold">${product.price}</span>
-                        <span className="text-sm text-gray-500">Stock: {product.stock}</span>
-                      </div>
-                      <Button
-                        onClick={() => deleteProduct(product.id)}
-                        variant="destructive"
-                        size="sm"
-                        className="w-full"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
-                      </Button>
-                    </div>
-                  ))}
+                    ))}
                 </div>
+                {(!Array.isArray(products) || products.length === 0) && (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No products found.</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -383,11 +443,16 @@ export default function AdminPage() {
                   value={newGalleryImage.description}
                   onChange={(e) => setNewGalleryImage({ ...newGalleryImage, description: e.target.value })}
                 />
-                <Input
-                  placeholder="Image URL"
-                  value={newGalleryImage.image}
-                  onChange={(e) => setNewGalleryImage({ ...newGalleryImage, image: e.target.value })}
-                />
+                <div>
+                  <label className="block text-sm font-medium mb-1">Gallery Image</label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, 'image', (path) => setNewGalleryImage(prev => ({ ...prev, image: path })))}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
+                  />
+                  {newGalleryImage.image && <img src={newGalleryImage.image} alt="Gallery preview" className="mt-2 h-20 rounded" />}
+                </div>
                 <Button onClick={addGalleryImage} className="bg-red-600 hover:bg-red-700">
                   Add Image
                 </Button>
@@ -400,27 +465,33 @@ export default function AdminPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {Array.isArray(gallery) && gallery.map((image) => (
-                    <div key={image.id} className="border p-4 rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold text-sm">{image.title}</h3>
-                        <Badge variant="secondary" className="text-xs">
-                          {image.category}
-                        </Badge>
+                  {Array.isArray(gallery) &&
+                    gallery.map((image) => (
+                      <div key={image.id} className="border p-4 rounded-lg">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-bold text-sm">{image.title}</h3>
+                          <Badge variant="secondary" className="text-xs">
+                            {image.category}
+                          </Badge>
+                        </div>
+                        <p className="text-gray-600 text-xs mb-2">{image.description}</p>
+                        <Button
+                          onClick={() => deleteGalleryImage(image.id)}
+                          variant="destructive"
+                          size="sm"
+                          className="w-full"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </Button>
                       </div>
-                      <p className="text-gray-600 text-xs mb-2">{image.description}</p>
-                      <Button
-                        onClick={() => deleteGalleryImage(image.id)}
-                        variant="destructive"
-                        size="sm"
-                        className="w-full"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
-                      </Button>
-                    </div>
-                  ))}
+                    ))}
                 </div>
+                {(!Array.isArray(gallery) || gallery.length === 0) && (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No gallery images found.</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -433,24 +504,25 @@ export default function AdminPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {Array.isArray(contacts) && contacts.map((contact) => (
-                    <div key={contact.id} className="border p-4 rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-bold">{contact.firstName}</h3>
-                          <p className="text-sm text-gray-600">{contact.email}</p>
-                          {contact.phone && <p className="text-sm text-gray-600">{contact.phone}</p>}
+                  {Array.isArray(contacts) &&
+                    contacts.map((contact) => (
+                      <div key={contact.id} className="border p-4 rounded-lg">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h3 className="font-bold">{contact.first_name || contact.firstName}</h3>
+                            <p className="text-sm text-gray-600">{contact.email}</p>
+                            {contact.phone && <p className="text-sm text-gray-600">{contact.phone}</p>}
+                          </div>
+                          <div className="text-right">
+                            <Badge variant={contact.status === "new" ? "default" : "secondary"}>{contact.status}</Badge>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {new Date(contact.created_at || contact.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <Badge variant={contact.status === "new" ? "default" : "secondary"}>{contact.status}</Badge>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {new Date(contact.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
+                        <p className="text-gray-700">{contact.message}</p>
                       </div>
-                      <p className="text-gray-700">{contact.message}</p>
-                    </div>
-                  ))}
+                    ))}
                   {(!Array.isArray(contacts) || contacts.length === 0) && (
                     <div className="text-center py-8">
                       <p className="text-gray-500">No contact messages yet.</p>
@@ -466,32 +538,142 @@ export default function AdminPage() {
               <CardHeader>
                 <CardTitle>Edit Page Content</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6"> {/* Increased spacing */}
+                {/* Text Content */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Company Vision</label>
+                  <label className="block text-sm font-medium mb-1">Company Vision</label>
                   <Textarea
-                    value={settings.vision || ""}
-                    onChange={(e) => setSettings({ ...settings, vision: e.target.value })}
+                    value={settings.company_vision || ""}
+                    onChange={(e) => setSettings({ ...settings, company_vision: e.target.value })}
                     rows={3}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Company Mission</label>
+                  <label className="block text-sm font-medium mb-1">Company Mission</label>
                   <Textarea
-                    value={settings.mission || ""}
-                    onChange={(e) => setSettings({ ...settings, mission: e.target.value })}
+                    value={settings.company_mission || ""}
+                    onChange={(e) => setSettings({ ...settings, company_mission: e.target.value })}
                     rows={4}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">About Us Content</label>
+                  <label className="block text-sm font-medium mb-1">About Us Main Content</label>
                   <Textarea
-                    value={settings.aboutUs || ""}
-                    onChange={(e) => setSettings({ ...settings, aboutUs: e.target.value })}
+                    value={settings.about_us || ""}
+                    onChange={(e) => setSettings({ ...settings, about_us: e.target.value })}
                     rows={6}
                   />
                 </div>
-                <Button onClick={updateSettings} className="bg-red-600 hover:bg-red-700">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Gallery Page Description</label>
+                  <Textarea
+                    value={settings.gallery_page_description || ""}
+                    onChange={(e) => setSettings({ ...settings, gallery_page_description: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Homepage Hero Title (can include HTML like <br />)</label>
+                  <Textarea
+                    value={settings.home_hero_title || ""}
+                    onChange={(e) => setSettings({ ...settings, home_hero_title: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+                 <div>
+                  <label className="block text-sm font-medium mb-1">Homepage Company Info Section Title</label>
+                  <Input
+                    value={settings.home_company_info_title || ""}
+                    onChange={(e) => setSettings({ ...settings, home_company_info_title: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">About Us Video Embed URL (e.g., YouTube embed link)</label>
+                  <Input
+                    type="url"
+                    placeholder="https://www.youtube.com/embed/VIDEO_ID"
+                    value={settings.about_us_video_embed_url || ""}
+                    onChange={(e) => setSettings({ ...settings, about_us_video_embed_url: e.target.value })}
+                  />
+                </div>
+
+                {/* Image Uploads for Content Tab */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t mt-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Homepage Hero Background Image</label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileUpload(e, 'home_hero_background_url', (path) => setSettings(prev => ({ ...prev, home_hero_background_url: path })))}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
+                    />
+                    {settings.home_hero_background_url && <img src={settings.home_hero_background_url} alt="Hero preview" className="mt-2 h-20 rounded object-cover" />}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Homepage Secondary Image (Company Info Section)</label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileUpload(e, 'home_secondary_image_url', (path) => setSettings(prev => ({ ...prev, home_secondary_image_url: path })))}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
+                    />
+                    {settings.home_secondary_image_url && <img src={settings.home_secondary_image_url} alt="Secondary image preview" className="mt-2 h-20 rounded object-cover" />}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">About Us Page Image</label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileUpload(e, 'about_us_image', (path) => setSettings(prev => ({ ...prev, about_us_image: path })))}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
+                    />
+                    {settings.about_us_image && <img src={settings.about_us_image} alt="About Us image preview" className="mt-2 h-20 rounded object-cover" />}
+                  </div>
+                  {/* Inserting the missing About Page Hero Image input */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">About Page Hero Image</label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileUpload(e, 'about_page_hero_image_url', (path) => setSettings(prev => ({ ...prev, about_page_hero_image_url: path })))}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
+                    />
+                    {settings.about_page_hero_image_url && <img src={settings.about_page_hero_image_url} alt="About hero preview" className="mt-2 h-20 rounded object-cover" />}
+                  </div>
+                  {/* Page Specific Hero Images Continued */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Contact Page Hero Image</label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileUpload(e, 'contact_page_hero_image_url', (path) => setSettings(prev => ({ ...prev, contact_page_hero_image_url: path })))}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
+                    />
+                    {settings.contact_page_hero_image_url && <img src={settings.contact_page_hero_image_url} alt="Contact hero preview" className="mt-2 h-20 rounded object-cover" />}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Gallery Page Hero Image</label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileUpload(e, 'gallery_page_hero_image_url', (path) => setSettings(prev => ({ ...prev, gallery_page_hero_image_url: path })))}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
+                    />
+                    {settings.gallery_page_hero_image_url && <img src={settings.gallery_page_hero_image_url} alt="Gallery hero preview" className="mt-2 h-20 rounded object-cover" />}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Products Page Hero Image</label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileUpload(e, 'products_page_hero_image_url', (path) => setSettings(prev => ({ ...prev, products_page_hero_image_url: path })))}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
+                    />
+                    {settings.products_page_hero_image_url && <img src={settings.products_page_hero_image_url} alt="Products hero preview" className="mt-2 h-20 rounded object-cover" />}
+                  </div>
+                </div>
+                
+                <Button onClick={updateSettings} className="bg-red-600 hover:bg-red-700 mt-6">
                   Save Content Changes
                 </Button>
               </CardContent>
@@ -508,45 +690,45 @@ export default function AdminPage() {
                   <div>
                     <label className="block text-sm font-medium mb-2">Company Name</label>
                     <Input
-                      value={settings.companyName || ""}
-                      onChange={(e) => setSettings({ ...settings, companyName: e.target.value })}
+                      value={settings.company_name || settings.companyName || ""}
+                      onChange={(e) => setSettings({ ...settings, company_name: e.target.value })}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Email</label>
                     <Input
-                      value={settings.email || ""}
-                      onChange={(e) => setSettings({ ...settings, email: e.target.value })}
+                      value={settings.company_email || settings.email || ""}
+                      onChange={(e) => setSettings({ ...settings, company_email: e.target.value })}
                     />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Address</label>
                   <Input
-                    value={settings.address || ""}
-                    onChange={(e) => setSettings({ ...settings, address: e.target.value })}
+                    value={settings.company_address || settings.address || ""}
+                    onChange={(e) => setSettings({ ...settings, company_address: e.target.value })}
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">City</label>
                     <Input
-                      value={settings.city || ""}
-                      onChange={(e) => setSettings({ ...settings, city: e.target.value })}
+                      value={settings.company_city || settings.city || ""}
+                      onChange={(e) => setSettings({ ...settings, company_city: e.target.value })}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Country</label>
                     <Input
-                      value={settings.country || ""}
-                      onChange={(e) => setSettings({ ...settings, country: e.target.value })}
+                      value={settings.company_country || settings.country || ""}
+                      onChange={(e) => setSettings({ ...settings, company_country: e.target.value })}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Postal Code</label>
                     <Input
-                      value={settings.postalCode || ""}
-                      onChange={(e) => setSettings({ ...settings, postalCode: e.target.value })}
+                      value={settings.company_postal_code || settings.postalCode || ""}
+                      onChange={(e) => setSettings({ ...settings, company_postal_code: e.target.value })}
                     />
                   </div>
                 </div>
@@ -554,15 +736,15 @@ export default function AdminPage() {
                   <div>
                     <label className="block text-sm font-medium mb-2">Phone</label>
                     <Input
-                      value={settings.phone || ""}
-                      onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
+                      value={settings.company_phone || settings.phone || ""}
+                      onChange={(e) => setSettings({ ...settings, company_phone: e.target.value })}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">WhatsApp</label>
                     <Input
-                      value={settings.whatsapp || ""}
-                      onChange={(e) => setSettings({ ...settings, whatsapp: e.target.value })}
+                      value={settings.company_whatsapp || settings.whatsapp || ""}
+                      onChange={(e) => setSettings({ ...settings, company_whatsapp: e.target.value })}
                     />
                   </div>
                 </div>

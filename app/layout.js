@@ -9,8 +9,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata = {
   title: "CV. Primadona & Co - Charcoal Producer & Exporter",
   description:
-    "Leading charcoal producer and exporter from North Sumatra, Indonesia. Supplying best hardwood charcoal worldwide since 1997.",
-    generator: 'v0.dev'
+    "Leading charcoal producer and exporter from North Sumatra, Indonesia. Supplying best hardwood charcoal worldwide since 1997."
 }
 
 export default function RootLayout({ children }) {

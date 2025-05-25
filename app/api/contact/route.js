@@ -19,7 +19,7 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Invalid email format" }, { status: 400 })
     }
 
-    const newContact = db.addContact(body)
+    const newContact = await db.addContact(body) // Added await
 
     // In production, you would send email notification here
     console.log("New contact submission:", newContact)
@@ -30,19 +30,21 @@ export async function POST(request) {
       data: newContact,
     })
   } catch (error) {
+    console.error("API Error submitting contact form:", error) // Added console.error
     return NextResponse.json({ success: false, error: "Failed to submit contact form" }, { status: 500 })
   }
 }
 
 export async function GET() {
   try {
-    const contacts = db.getContacts()
+    const contacts = await db.getContacts() // Added await
 
     return NextResponse.json({
       success: true,
       data: contacts,
     })
   } catch (error) {
+    console.error("API Error fetching contacts:", error) // Added console.error
     return NextResponse.json({ success: false, error: "Failed to fetch contacts" }, { status: 500 })
   }
 }

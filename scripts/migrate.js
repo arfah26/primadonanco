@@ -184,13 +184,33 @@ const migrations = [
     `,
     down: "DROP TABLE IF EXISTS migrations",
   },
+  {
+    name: "011_seed_initial_ui_settings",
+    up: `
+      INSERT IGNORE INTO settings (setting_key, setting_value, setting_type, description) VALUES
+      ('home_hero_background_url', '/placeholder.svg?height=1080&width=1920', 'string', 'URL for the homepage hero background image'),
+      ('home_secondary_image_url', '/placeholder.svg?height=400&width=600', 'string', 'URL for the secondary image on the homepage'),
+      ('home_hero_title', 'We Have Supplying best<br /><span class=\"text-red-600\">Hardwood</span>', 'text', 'Main title for the homepage hero section (HTML allowed)'),
+      ('home_company_info_title', 'The best company in 2023', 'string', 'Title for the company info section on the homepage'),
+      ('about_us_image', '/placeholder.svg?height=300&width=400', 'string', 'URL for the image on the About Us page'),
+      ('about_us_video_embed_url', '', 'string', 'Embed URL for the video on the About Us page (e.g., YouTube embed URL)'),
+      ('gallery_page_description', 'Explore our collection of high-quality charcoal products and facilities.', 'text', 'Description text for the top of the gallery page'),
+      ('about_page_hero_image_url', '/placeholder.svg?height=400&width=1920', 'string', 'Hero image for the About Us page'),
+      ('contact_page_hero_image_url', '/placeholder.svg?height=400&width=1920', 'string', 'Hero image for the Contact Us page'),
+      ('gallery_page_hero_image_url', '/placeholder.svg?height=400&width=1920', 'string', 'Hero image for the Gallery page'),
+      ('products_page_hero_image_url', '/placeholder.svg?height=400&width=1920', 'string', 'Hero image for the Products page');
+    `,
+    // Down migration for seed data is often to just leave it, or selectively delete.
+    // For simplicity, we'll make 'down' a no-op for this seed.
+    down: "SELECT 'Seed data removal not automatically handled for 011_seed_initial_ui_settings';"
+  },
 ]
 
 async function runMigrations() {
   console.log("🚀 Starting database migrations...")
 
   // Load environment variables
-  require("dotenv").config()
+  require("dotenv").config({ path: ".env.local" })
 
   // Test connection first
   const isConnected = await testConnection()
@@ -202,9 +222,14 @@ async function runMigrations() {
   const pool = getPool()
 
   try {
-    // Create migrations table first
-    const migrationTableQuery = migrations.find((m) => m.name === "010_create_migrations_table")
-    await pool.execute(migrationTableQuery.up)
+    // Create migrations table first if it doesn't exist (idempotent)
+    const migrationTableMigration = migrations.find((m) => m.name === "010_create_migrations_table")
+    if (migrationTableMigration) { // Ensure it exists in the array
+        await pool.execute(migrationTableMigration.up)
+    } else {
+        console.warn("⚠️ Migration '010_create_migrations_table' not found. Assuming migrations table exists or is handled elsewhere.");
+    }
+
 
     // Get executed migrations
     const [executedMigrations] = await pool.execute("SELECT migration_name FROM migrations")
@@ -216,12 +241,15 @@ async function runMigrations() {
         console.log(`📝 Running migration: ${migration.name}`)
 
         try {
-          await pool.execute(migration.up)
+          await pool.execute(migration.up) // Use execute for DDL and simple DML
           await pool.execute("INSERT INTO migrations (migration_name) VALUES (?)", [migration.name])
           console.log(`✅ Migration completed: ${migration.name}`)
         } catch (error) {
           console.error(`❌ Migration failed: ${migration.name}`, error.message)
-          throw error
+          if (error.sqlMessage) console.error("SQL Error:", error.sqlMessage);
+          if (error.sql) console.error("Failed SQL:", error.sql);
+          // Decide if you want to throw and stop all migrations or continue
+          throw error // Stop on first error
         }
       } else {
         console.log(`⏭️  Skipping already executed migration: ${migration.name}`)
@@ -230,10 +258,12 @@ async function runMigrations() {
 
     console.log("🎉 All migrations completed successfully!")
   } catch (error) {
-    console.error("❌ Migration failed:", error.message)
+    // Error is already logged by the inner catch, or if it's from outside the loop.
+    console.error("❌ A critical error occurred during the migration process.");
     process.exit(1)
   } finally {
     await pool.end()
+    console.log("Database pool ended.");
   }
 }
 
@@ -241,7 +271,7 @@ async function rollbackMigration(migrationName) {
   console.log(`🔄 Rolling back migration: ${migrationName}`)
 
   // Load environment variables
-  require("dotenv").config()
+  require("dotenv").config({ path: ".env.local" })
 
   const pool = getPool()
 

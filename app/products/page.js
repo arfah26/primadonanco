@@ -8,26 +8,44 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([])
+  const [settings, setSettings] = useState({ // Added settings state
+    products_page_hero_image_url: "",
+    products_page_hero_description: "Charcoal is a versatile material that has been used for centuries. It can be made from a variety of sources such as wood, coconut shells, or peat. Charcoal is used for a wide range of purposes including fuel for cooking and heating, art and drawing, water filtration, and even in medicine."
+  });
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState("all")
 
   useEffect(() => {
-    fetchProducts()
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const productsRes = await fetch("/api/products");
+        const productsData = await productsRes.json();
+        if (productsData.success) {
+          setProducts(productsData.data || []);
+        } else {
+          console.error("Failed to fetch products:", productsData.error);
+        }
+
+        const settingsRes = await fetch("/api/settings");
+        const settingsData = await settingsRes.json();
+        if (settingsData.success && settingsData.data) {
+          setSettings(prevSettings => ({ ...prevSettings, ...settingsData.data }));
+        } else {
+          console.error("Failed to fetch settings for products page:", settingsData.error);
+        }
+
+      } catch (error) {
+        console.error("Failed to fetch products page data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, [])
 
-  const fetchProducts = async () => {
-    try {
-      const response = await fetch("/api/products")
-      const data = await response.json()
-      if (data.success) {
-        setProducts(data.data)
-      }
-    } catch (error) {
-      console.error("Failed to fetch products:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // This function is no longer needed as it's incorporated into fetchData
+  // const fetchProducts = async () => { ... }
 
   const categories = ["all", "premium", "standard", "bbq", "industrial"]
 
@@ -48,17 +66,33 @@ export default function ProductsPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Hero Section */}
-      <section className="py-20 px-4 text-center">
-        <div className="max-w-6xl mx-auto">
+      <section
+        className="relative h-96 flex items-center justify-center text-white bg-black" // Added bg-black as fallback
+      >
+        {settings.products_page_hero_image_url && (
+          <Image
+            src={settings.products_page_hero_image_url}
+            alt="Our Products Hero"
+            layout="fill"
+            objectFit="cover"
+            className="absolute inset-0"
+            style={{ filter: "brightness(0.6)" }} // Apply brightness to the image
+            unoptimized={settings.products_page_hero_image_url?.startsWith('/')}
+          />
+        )}
+        <div className="relative z-10 text-center px-4 max-w-6xl mx-auto">
           <h1 className="text-6xl font-bold mb-8">
             OUR <span className="text-red-600">PRODUCT</span>
           </h1>
-          <p className="text-lg mb-12 max-w-3xl mx-auto">
-            Charcoal is a versatile material that has been used for centuries. It can be made from a variety of sources
-            such as wood, coconut shells, or peat. Charcoal is used for a wide range of purposes including fuel for
-            cooking and heating, art and drawing, water filtration, and even in medicine.
+          <p className="text-lg mb-12 max-w-3xl mx-auto text-gray-200"> {/* Adjusted text color */}
+            {settings.products_page_hero_description || "Explore our wide range of high-quality charcoal products."}
           </p>
-
+        </div>
+      </section>
+      
+      {/* Category Filter & Main Content Section */}
+      <section className="py-16 px-4">
+        <div className="max-w-6xl mx-auto">
           {/* Category Filter */}
           <div className="flex flex-wrap justify-center gap-4 mb-12">
             {categories.map((category) => (
@@ -106,10 +140,6 @@ export default function ProductsPage() {
                 </CardHeader>
                 <CardContent>
                   <CardDescription className="text-gray-300 mb-4">{product.description}</CardDescription>
-                  <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-red-600">${product.price}</span>
-                    <span className="text-sm text-gray-400">Stock: {product.stock}</span>
-                  </div>
                   <Button className="w-full mt-4 bg-red-600 hover:bg-red-700">Contact for Quote</Button>
                 </CardContent>
               </Card>

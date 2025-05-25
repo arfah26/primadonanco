@@ -3,7 +3,7 @@ import db from "@/lib/database"
 
 export async function GET(request, { params }) {
   try {
-    const product = db.getProduct(params.id)
+    const product = await db.getProduct(params.id)
 
     if (!product) {
       return NextResponse.json({ success: false, error: "Product not found" }, { status: 404 })
@@ -21,7 +21,13 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
   try {
     const body = await request.json()
-    const updatedProduct = db.updateProduct(params.id, body)
+
+    // Validate required fields
+    if (!body.name || !body.description) {
+      return NextResponse.json({ success: false, error: "Name and description are required" }, { status: 400 })
+    }
+
+    const updatedProduct = await db.updateProduct(params.id, body)
 
     if (!updatedProduct) {
       return NextResponse.json({ success: false, error: "Product not found" }, { status: 404 })
@@ -30,6 +36,7 @@ export async function PUT(request, { params }) {
     return NextResponse.json({
       success: true,
       data: updatedProduct,
+      message: "Product updated successfully",
     })
   } catch (error) {
     return NextResponse.json({ success: false, error: "Failed to update product" }, { status: 500 })
@@ -38,9 +45,9 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const deletedProduct = db.deleteProduct(params.id)
+    const success = await db.deleteProduct(params.id)
 
-    if (!deletedProduct) {
+    if (!success) {
       return NextResponse.json({ success: false, error: "Product not found" }, { status: 404 })
     }
 

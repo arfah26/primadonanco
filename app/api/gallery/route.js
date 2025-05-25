@@ -3,13 +3,14 @@ import db from "@/lib/database"
 
 export async function GET() {
   try {
-    const gallery = db.getGallery()
+    const gallery = await db.getGallery() // Added await
 
     return NextResponse.json({
       success: true,
       data: gallery,
     })
   } catch (error) {
+    console.error("API Error fetching gallery:", error) // Added console.error
     return NextResponse.json({ success: false, error: "Failed to fetch gallery" }, { status: 500 })
   }
 }
@@ -22,7 +23,7 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Title and image are required" }, { status: 400 })
     }
 
-    const newImage = db.addGalleryImage(body)
+    const newImage = await db.addGalleryImage(body) // Added await
 
     return NextResponse.json(
       {
@@ -32,6 +33,7 @@ export async function POST(request) {
       { status: 201 },
     )
   } catch (error) {
+    console.error("API Error adding gallery image:", error) // Added console.error
     return NextResponse.json({ success: false, error: "Failed to add gallery image" }, { status: 500 })
   }
 }
