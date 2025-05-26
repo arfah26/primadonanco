@@ -56,8 +56,7 @@ export default function Navbar() {
 
           {/* Company Info */}
           <div className="hidden lg:block text-sm">
-            <p>Jl. Garuda I, Medan Krio, Kec. Sunggal, Kabupaten</p>
-            <p>Deli Serdang, Sumatera Utara 20351</p>
+            <p>Jl. Garuda I No. 09 Sei Semayang Medan</p>
           </div>
 
           {/* Mobile menu button */}

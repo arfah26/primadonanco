@@ -19,7 +19,7 @@ export default function ContactPage() {
     company_phone: "061-8461239",
     company_address: "Jl.Garuda I no. 09 Sei Semayang Medan.",
     company_whatsapp: "+62 8126012712",
-    map_address_line1: "Jl. Garuda I, Medan Krio, Kec. Sunggal, Kabupaten Deli Serdang, Sumatera Utara 20351",
+    map_address_line1: "Jl. Garuda I No. 09 Sei Semayang Medan",
     map_embed_url: "",
     contact_page_hero_image_url: "/placeholder.svg?height=400&width=1920" // Added default for hero
   })
@@ -131,7 +131,7 @@ export default function ContactPage() {
           <div>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <Label htmlFor="firstName">First Name *</Label>
+                <Label htmlFor="firstName">Full Name *</Label>
                 <Input
                   id="firstName"
                   name="firstName"
@@ -202,7 +202,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Map Section */}
+      {/* Map Section
       <section className="px-4 pb-16">
         <div className="max-w-6xl mx-auto">
           <div className="bg-gray-200 h-96 rounded-lg flex items-center justify-center p-4">
@@ -228,7 +228,7 @@ export default function ContactPage() {
             )}
           </div>
         </div>
-      </section>
+      </section> */}
     </div>
   )
 }

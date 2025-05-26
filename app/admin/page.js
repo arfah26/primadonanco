@@ -305,7 +305,7 @@ export default function AdminPage() {
         <Tabs defaultValue="products" className="w-full">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="gallery">Gallery</TabsTrigger>
+            {/* <TabsTrigger value="gallery">Gallery</TabsTrigger> */}
             <TabsTrigger value="contacts">Contacts</TabsTrigger>
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>

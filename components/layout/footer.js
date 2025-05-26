@@ -27,8 +27,7 @@ export default function Footer() {
 
           {/* Company Info */}
           <div className="text-center">
-            <p className="text-sm">Jl. Garuda I, Medan Krio, Kec. Sunggal, Kabupaten</p>
-            <p className="text-sm">Deli Serdang, Sumatera Utara 20351</p>
+            <p className="text-sm">Jl. Garuda I No. 09 Sei Semayang Medan</p>
           </div>
 
           {/* Logo */}

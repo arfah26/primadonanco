@@ -8,7 +8,7 @@ export async function POST(request) {
     // Validate required fields
     if (!body.firstName || !body.email || !body.message) {
       return NextResponse.json(
-        { success: false, error: "First name, email, and message are required" },
+        { success: false, error: "Full name, email, and message are required" },
         { status: 400 },
       )
     }
