@@ -259,7 +259,7 @@ export default function AdminPage() {
           </Button>
         </div>
 
-        {/* Analytics Cards */}
+        {/* Analytics Cards
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -300,7 +300,7 @@ export default function AdminPage() {
               <div className="text-2xl font-bold">{analytics.totalGalleryImages || 0}</div>
             </CardContent>
           </Card>
-        </div>
+        </div> */}
 
         <Tabs defaultValue="products" className="w-full">
           <TabsList className="grid w-full grid-cols-5">
