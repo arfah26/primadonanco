@@ -11,7 +11,7 @@ const nextConfig = {
           {
             key: "Content-Security-Policy",
             value: `
-              default-src 'self' http: https: http://localhost:3000 https://primadonanco.com;
+              default-src 'self' http: https: http://localhost:3000 https://primadonanco.com https://flagcdn.com;
               script-src 'self' 'unsafe-inline' https://www.youtube.com https://www.youtube-nocookie.com;
               frame-src https://www.youtube.com https://www.youtube-nocookie.com;
               child-src https://www.youtube.com https://www.youtube-nocookie.com;
