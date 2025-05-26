@@ -100,8 +100,8 @@ export default function AboutPage() {
               <Image
                     src="/Primadona_512.png"
                     alt="Company Facility"
-                    width={100}
-                    height={100}
+                    width={20}
+                    height={20}
                     className="rounded"
                     unoptimized // disables Next.js image optimization (use only for static/local images)
               /> {settings.company_name || "PRIMADONA & CO"}
