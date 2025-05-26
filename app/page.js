@@ -194,15 +194,19 @@ export default function HomePage() {
 
           <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
             {[
-              { name: "Middle East", flag: "🇵🇸" },
-              { name: "South Korea", flag: "🇰🇷" },
-              { name: "Flag of Taiwan", flag: "🇹🇼" },
-              { name: "Italia", flag: "🇮🇹" },
-              { name: "Turkey", flag: "🇹🇷" },
-              { name: "Australia", flag: "🇦🇺" },
+              { name: "Middle East (Saudi Arabia)", code: "sa" },
+              { name: "South Korea", code: "kr" },
+              { name: "Taiwan", code: "tw" },
+              { name: "Italia", code: "it" },
+              { name: "Turkey", code: "tr" },
+              { name: "Australia", code: "au" },
             ].map((country, index) => (
               <div key={index} className="text-center">
-                <div className="text-6xl mb-2">{country.flag}</div>
+                <img
+                  src={`https://flagcdn.com/w80/${country.code}.png`}
+                  alt={`${country.name} Flag`}
+                  className="mx-auto mb-2 w-14 h-auto rounded shadow"
+                />
                 <p className="font-medium">{country.name}</p>
               </div>
             ))}

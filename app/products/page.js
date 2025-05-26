@@ -109,7 +109,7 @@ export default function ProductsPage() {
 
           {/* Large CHARCOAL text background */}
           <div className="relative mb-16">
-            <h2 className="text-8xl md:text-9xl font-bold text-gray-800 opacity-20 select-none">CHARCOAL</h2>
+            <h2 className="text-8xl md:text-9xl font-bold text-white-800 opacity-20 select-none">CHARCOAL</h2>
           </div>
         </div>
       </section>

@@ -4,6 +4,8 @@ import { useState } from "react"
 import Link from "next/link"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import Image from 'next/image'
+
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -23,7 +25,16 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <div className="bg-red-600 p-2 rounded">
-              <span className="text-white font-bold">📦</span>
+              <span className="text-white font-bold">
+                <Image
+                  src="/Primadona_512.png"
+                  alt="Company Facility"
+                  width={20}
+                  height={20}
+                  className="rounded"
+                  unoptimized // disables Next.js image optimization (use only for static/local images)
+                />
+              </span>
             </div>
             <span className="font-bold text-lg">PRIMADONA & CO</span>
           </Link>

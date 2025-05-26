@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from 'next/image'
 
 export default function Footer() {
   return (
@@ -34,7 +35,16 @@ export default function Footer() {
           <div className="flex justify-end items-center">
             <div className="flex items-center space-x-2">
               <div className="bg-red-600 p-2 rounded">
-                <span className="text-white font-bold">📦</span>
+                <span className="text-white font-bold">
+                  <Image
+                    src="/Primadona_512.png"
+                    alt="Company Facility"
+                    width={50}
+                    height={50}
+                    className="rounded"
+                    unoptimized // disables Next.js image optimization (use only for static/local images)
+                  />
+                </span>
               </div>
               <span className="font-bold">PRIMADONA & CO</span>
             </div>

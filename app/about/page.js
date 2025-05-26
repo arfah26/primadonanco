@@ -96,7 +96,16 @@ export default function AboutPage() {
         />
         <div className="relative z-10 text-center">
           <div className="bg-red-600 text-white p-4 rounded mb-4 inline-block">
-            <span className="text-2xl font-bold">📦 {settings.company_name || "PRIMADONA & CO"}</span>
+            <span className="text-2xl font-bold">
+              <Image
+                    src="/Primadona_512.png"
+                    alt="Company Facility"
+                    width={100}
+                    height={100}
+                    className="rounded"
+                    unoptimized // disables Next.js image optimization (use only for static/local images)
+              /> {settings.company_name || "PRIMADONA & CO"}
+            </span>
           </div>
           <h1 className="text-5xl font-bold mb-4">{settings.company_name || "CV.PRIMADONA & CO"}</h1>
           <p className="text-xl">{settings.company_slogan || "PRODUCER & EXPORTER CHARCOAL"}</p>
@@ -195,8 +204,7 @@ export default function AboutPage() {
             {settings.about_us_video_embed_url ? (
               <div className="aspect-video rounded-lg overflow-hidden">
                 <iframe
-                  width="100%"
-                  height="100%"
+                  className="w-full h-full"
                   src={settings.about_us_video_embed_url}
                   title="Company Video"
                   frameBorder="0"
@@ -227,15 +235,19 @@ export default function AboutPage() {
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
             {[
-              { name: "Middle East", flag: "🇵🇸" },
-              { name: "South Korea", flag: "🇰🇷" },
-              { name: "Flag of Taiwan", flag: "🇹🇼" },
-              { name: "Italia", flag: "🇮🇹" },
-              { name: "Turkey", flag: "🇹🇷" },
-              { name: "Australia", flag: "🇦🇺" },
+              { name: "Middle East (Saudi Arabia)", code: "sa" },
+              { name: "South Korea", code: "kr" },
+              { name: "Taiwan", code: "tw" },
+              { name: "Italia", code: "it" },
+              { name: "Turkey", code: "tr" },
+              { name: "Australia", code: "au" },
             ].map((country, index) => (
               <div key={index} className="text-center">
-                <div className="text-6xl mb-2">{country.flag}</div>
+                <img
+                  src={`https://flagcdn.com/w80/${country.code}.png`}
+                  alt={`${country.name} Flag`}
+                  className="mx-auto mb-2 w-14 h-auto rounded shadow"
+                />
                 <p className="font-medium">{country.name}</p>
               </div>
             ))}
