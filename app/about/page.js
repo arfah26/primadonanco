@@ -95,18 +95,19 @@ export default function AboutPage() {
           }}
         />
         <div className="relative z-10 text-center">
-          <div className="bg-red-600 text-white p-4 rounded mb-4 inline-block">
-            <span className="text-2xl font-bold">
+          <div className="bg-red-600 text-white p-4 rounded mb-4 inline-block mx-auto">
+            <span className="text-2xl font-bold flex items-center space-x-2">
               <Image
-                    src="/Primadona_512.png"
-                    alt="Company Facility"
-                    width={20}
-                    height={20}
-                    className="rounded"
-                    unoptimized // disables Next.js image optimization (use only for static/local images)
-              /> {settings.company_name || "PRIMADONA & CO"}
+                src="/Primadona_512.png"
+                alt="Company Facility"
+                width={50}
+                height={50}
+                className="rounded"
+                unoptimized
+              />
             </span>
           </div>
+
           <h1 className="text-5xl font-bold mb-4">{settings.company_name || "CV.PRIMADONA & CO"}</h1>
           <p className="text-xl">{settings.company_slogan || "PRODUCER & EXPORTER CHARCOAL"}</p>
 
