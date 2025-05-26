@@ -16,7 +16,7 @@ const nextConfig = {
               frame-src https://www.youtube.com https://www.youtube-nocookie.com;
               child-src https://www.youtube.com https://www.youtube-nocookie.com;
               style-src 'self' 'unsafe-inline';
-              img-src 'self' https://i.ytimg.com data: http: https:;
+              img-src 'self' https://i.ytimg.com https://flagcdn.com data: http: https:;
               media-src 'self';
               connect-src 'self' http: https: http://localhost:3000 https://primadonanco.com;
             `.replace(/\s{2,}/g, ' ').trim(),
