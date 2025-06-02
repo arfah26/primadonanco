@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://primadonanco.com
+
+# Sitemaps
+Sitemap: https://primadonanco.com/sitemap.xml
