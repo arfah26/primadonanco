@@ -87,7 +87,7 @@ export default function HomePage() {
             <Button
               asChild
               variant="outline"
-              className="border-white text-white hover:bg-white hover:text-black px-8 py-3"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-8"
             >
               <Link href="/contact">Contact Us</Link>
             </Button>

@@ -98,9 +98,13 @@ export default function ProductsPage() {
             {categories.map((category) => (
               <Button
                 key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
+                variant="outline"
                 onClick={() => setSelectedCategory(category)}
-                className={selectedCategory === category ? "bg-red-600 hover:bg-red-700" : ""}
+                className={
+                  selectedCategory === category
+                    ? "bg-red-600 hover:bg-red-700 text-white px-8"
+                    : "bg-orange-500 hover:bg-orange-600 text-white px-8"
+                }
               >
                 {category.charAt(0).toUpperCase() + category.slice(1)}
               </Button>
@@ -140,7 +144,7 @@ export default function ProductsPage() {
                 </CardHeader>
                 <CardContent>
                   <CardDescription className="text-gray-300 mb-4">{product.description}</CardDescription>
-                  <Button className="w-full mt-4 bg-red-600 hover:bg-red-700">Contact for Quote</Button>
+                  <a href="https://wa.me/628126012712" target="blank"> <Button className="w-full mt-4 bg-red-600 hover:bg-red-700">Contact for Quote</Button></a>
                 </CardContent>
               </Card>
             ))}
