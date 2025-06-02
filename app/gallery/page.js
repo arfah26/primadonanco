@@ -47,10 +47,11 @@ export default function GalleryPage() {
                     width={image.width}
                     height={image.height}
                     className="rounded-lg group-hover:opacity-75 transition-opacity duration-300 object-cover"
-                    unoptimized
-                    priority={image.id <= 3} // Load first 3 images with priority
-                    placeholder="blur" // Use a blurred placeholder
-                    blurDataURL={`/gallery/gallery${image.id}-blur.jpg`} // Provide a low-quality image placeholder
+                    priority={image.id <= 3}
+                    placeholder="blur"
+                    blurDataURL={`/gallery/gallery${image.id}-blur.jpg`}
+                    loading={image.id <= 3 ? 'eager' : 'lazy'}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                   />
                   {image.title && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
